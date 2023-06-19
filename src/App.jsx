@@ -23,8 +23,7 @@ import {
   CalendarCell,
   CellStates,
 } from "./components/calendar-cell/calendar-cell";
-import { getTimeData, getWeekData } from "./utils/helpers";
-import { monthNames, weekSymbols } from "./const";
+import { CalendarWeek } from "./utils/calendar-week";
 
 const defaultGrid = Array(24 * 7).fill({ status: CellStates.Empty });
 
@@ -41,29 +40,29 @@ const determineCellNumber = (date) => {
   return (weekDay - 1) * hour;
 };
 
-const isCurrentDay = (day) => {
+const isCurrentDay = ({ year, month, weekDay }) => {
   const currentDate = new Date();
   return (
-    day.year === currentDate.getFullYear() &&
-    day.month === currentDate.getMonth() &&
-    day.number === currentDate.getDate()
+    year === currentDate.getFullYear() &&
+    month === currentDate.getMonth() &&
+    weekDay === currentDate.getDate()
   );
 };
 
-const getCurrentDate = () => {
-  return getWeekData(getTimeData(new Date()));
-};
+const calendarWeek = new CalendarWeek(new Date());
 
 export function App() {
-  const [week, setWeek] = useState(getCurrentDate());
+  const [week, setWeek] = useState(calendarWeek.getWeek());
   const [grid, setGrid] = useState(defaultGrid);
 
   const addEvent = () => {
     const time = prompt(
       "Enter event time:\nYYYY-MM-DD HH:mm",
-      `${week.year}-${week.month}-${week.day} 09:00`
+      `${week.year}-${week.month}-${new Date().getDate()} 09:00`
     );
-
+    if (time === null) {
+      return;
+    }
     const parsedTime = Date.parse(time);
     if (isNaN(parsedTime)) {
       alert("Event time is incorrect!");
@@ -76,30 +75,21 @@ export function App() {
         }
         return cell;
       });
-      const newWeek = getWeekData(getTimeData(eventTime));
       setGrid(newGrid);
-      setWeek(newWeek);
     }
   };
 
   const selectCell = () => {};
 
   const navigateLeft = () => {
-    const newWeek = getWeekData({ ...week, weekDay: 1, day: week.day - 7 });
+    const newWeek = calendarWeek.setWeek({ ...week, monday: week.monday - 7 });
     setWeek(newWeek);
   };
 
   const navigateRight = () => {
-    const newWeek = getWeekData({ ...week, weekDay: 1, day: week.day + 7 });
+    const newWeek = calendarWeek.setWeek({ ...week, monday: week.monday + 7 });
     setWeek(newWeek);
   };
-
-  const days = weekSymbols.map((_, index) => ({
-    year: week.year,
-    month: week.month,
-    number: week.monday + index,
-    weekDay: weekSymbols[index],
-  }));
 
   return (
     <Wrapper>
@@ -110,17 +100,19 @@ export function App() {
         </Button>
       </Header>
       <DateArea>
-        {days.map((day) => (
-          <Day key={day.number}>
-            <WeekDay>{day.weekDay}</WeekDay>
-            <MonthDay $selected={isCurrentDay(day)}>{day.number}</MonthDay>
+        {week.weekDays.map((weekDay, index) => (
+          <Day key={weekDay}>
+            <WeekDay>{calendarWeek.weekSymbols[index]}</WeekDay>
+            <MonthDay $selected={isCurrentDay({ ...week, weekDay })}>
+              {weekDay}
+            </MonthDay>
           </Day>
         ))}
         <MonthNavigationButton onClick={navigateLeft}>
           <ArrowLeftIcon width="16px" height="16px" />
         </MonthNavigationButton>
         <Month>
-          {monthNames[week.month]} {week.year}
+          {calendarWeek.monthNames[week.month]} {week.year}
         </Month>
         <MonthNavigationButton onClick={navigateRight}>
           <ArrowRightIcon width="16px" height="16px" />
