@@ -1,11 +1,20 @@
 import styled from "styled-components";
-import { border, cellHeight, selectedCellColor } from "../styles/variables";
+import {
+  border,
+  cellHeight,
+  selectedCellColor,
+  eventColor,
+} from "../../styles/variables";
 import { CellStates } from "./calendar-cell";
 
 const chooseColor = (status) => {
   switch (status) {
     case CellStates.Empty:
       return "transparent";
+    case CellStates.Event:
+      return eventColor;
+    case CellStates.Selected:
+      return selectedCellColor;
     default:
       break;
   }

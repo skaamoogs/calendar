@@ -19,46 +19,14 @@ import {
 import { ArrowLeftIcon } from "./icons/arrow-left";
 import { ArrowRightIcon } from "./icons/arrow-right";
 import { PlusIcon } from "./icons/plus-icon";
-import { CalendarCell } from "./components/calendar-cell";
+import {
+  CalendarCell,
+  CellStates,
+} from "./components/calendar-cell/calendar-cell";
+import { getTimeData, getWeekData } from "./utils/helpers";
+import { monthNames, weekSymbols } from "./const";
 
-const getDaysInMonth = function (year, month) {
-  return 33 - new Date(year, month, 33).getDate();
-};
-
-const date = new Date();
-const year = date.getFullYear();
-const month = date.getMonth();
-const day = date.getDate();
-const weekDay = date.getDay();
-
-let monday = day - weekDay + 1;
-if (monday < 0) {
-  let prevYear = year;
-  let prevMonth = month - 1;
-  if (month < 0) {
-    prevYear = year - 1;
-    prevMonth = 11;
-  }
-  monday += getDaysInMonth(prevYear, prevMonth);
-}
-
-const week = ["M", "T", "W", "T", "F", "S", "S"];
-const months = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-const defaultGrid = Array(24 * 7).fill({});
+const defaultGrid = Array(24 * 7).fill({ status: CellStates.Empty });
 
 const hours = Array(24)
   .fill("00:00")
@@ -67,20 +35,70 @@ const hours = Array(24)
     return `${zero}${index}:00`;
   });
 
+const determineCellNumber = (date) => {
+  const weekDay = date.getDay();
+  const hour = date.getHours();
+  return (weekDay - 1) * hour;
+};
+
+const isCurrentDay = (day) => {
+  const currentDate = new Date();
+  return (
+    day.year === currentDate.getFullYear() &&
+    day.month === currentDate.getMonth() &&
+    day.number === currentDate.getDate()
+  );
+};
+
+const getCurrentDate = () => {
+  return getWeekData(getTimeData(new Date()));
+};
+
 export function App() {
+  const [week, setWeek] = useState(getCurrentDate());
   const [grid, setGrid] = useState(defaultGrid);
-  const [selectedDay, setSelectedDay] = useState(day);
 
   const addEvent = () => {
     const time = prompt(
       "Enter event time:\nYYYY-MM-DD HH:mm",
-      `${year}-${month}-${day} 09:00`
+      `${week.year}-${week.month}-${week.day} 09:00`
     );
+
+    const parsedTime = Date.parse(time);
+    if (isNaN(parsedTime)) {
+      alert("Event time is incorrect!");
+    } else {
+      const eventTime = new Date(parsedTime);
+      const cellNumber = determineCellNumber(eventTime);
+      const newGrid = grid.map((cell, index) => {
+        if (index === cellNumber) {
+          return { status: CellStates.Event };
+        }
+        return cell;
+      });
+      const newWeek = getWeekData(getTimeData(eventTime));
+      setGrid(newGrid);
+      setWeek(newWeek);
+    }
   };
 
-  const days = week.map((_, index) => ({
-    number: monday + index,
-    weekDay: week[index],
+  const selectCell = () => {};
+
+  const navigateLeft = () => {
+    const newWeek = getWeekData({ ...week, weekDay: 1, day: week.day - 7 });
+    setWeek(newWeek);
+  };
+
+  const navigateRight = () => {
+    const newWeek = getWeekData({ ...week, weekDay: 1, day: week.day + 7 });
+    setWeek(newWeek);
+  };
+
+  const days = weekSymbols.map((_, index) => ({
+    year: week.year,
+    month: week.month,
+    number: week.monday + index,
+    weekDay: weekSymbols[index],
   }));
 
   return (
@@ -95,16 +113,16 @@ export function App() {
         {days.map((day) => (
           <Day key={day.number}>
             <WeekDay>{day.weekDay}</WeekDay>
-            <MonthDay>{day.number}</MonthDay>
+            <MonthDay $selected={isCurrentDay(day)}>{day.number}</MonthDay>
           </Day>
         ))}
-        <MonthNavigationButton>
+        <MonthNavigationButton onClick={navigateLeft}>
           <ArrowLeftIcon width="16px" height="16px" />
         </MonthNavigationButton>
         <Month>
-          {months[month]} {year}
+          {monthNames[week.month]} {week.year}
         </Month>
-        <MonthNavigationButton>
+        <MonthNavigationButton onClick={navigateRight}>
           <ArrowRightIcon width="16px" height="16px" />
         </MonthNavigationButton>
       </DateArea>
@@ -115,8 +133,13 @@ export function App() {
           ))}
         </LeftBar>
         <Grid>
-          {grid.map((_, hourIndex) => (
-            <CalendarCell key={hourIndex}></CalendarCell>
+          {grid.map((cell, index) => (
+            <CalendarCell
+              key={index}
+              id={index}
+              onClick={selectCell}
+              status={cell.status}
+            ></CalendarCell>
           ))}
         </Grid>
       </Calendar>

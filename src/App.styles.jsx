@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import {
   bgColor,
   border,
@@ -59,7 +59,10 @@ export const DateArea = styled.div`
 export const Days = styled.div``;
 
 export const Day = styled.div`
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 `;
 
 export const WeekDay = styled.p`
@@ -67,13 +70,26 @@ export const WeekDay = styled.p`
   font-weight: 600;
   margin: 0;
   padding: 6px;
+  text-align: center;
 `;
 
 export const MonthDay = styled.p`
   font-size: 1.25em;
   font-weight: 500;
-  margin: 0;
   padding: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 100%;
+  margin: 6px 0;
+  text-align: center;
+  ${(props) => {
+    if (props.$selected) {
+      return css`
+        background-color: ${primaryColor};
+        color: white;
+      `;
+    }
+  }}
 `;
 
 export const Month = styled.p`
