@@ -23,10 +23,11 @@ import { CalendarCell } from "./components/calendar-cell/calendar-cell";
 import { getCalendarGrid, hours, isCurrentDay } from "./utils/helpers";
 import { monthNames } from "./const";
 import { WEEK_ACTIONS, useWeek } from "./hooks/useWeek";
+import { useEvents } from "./hooks/useEvents";
 
 export function App() {
   const [week, changeWeek] = useWeek();
-  const [events, setEvents] = useState([]);
+  const [events, changeEvents] = useEvents();
   const [selectedCell, setSelectedCell] = useState("");
   const calendarRef = useRef(null);
 
@@ -50,19 +51,19 @@ export function App() {
       changeWeek(WEEK_ACTIONS.SET_WEEK_BY_DATE, event);
       calendarRef.current.scrollTop =
         (calendarRef.current.scrollHeight / 24) * event.getHours();
-      setEvents((prevState) => [...prevState, event.toString()]);
+      const newEvents = [...events, event.toString()];
+      changeEvents(newEvents);
     }
   };
 
   const deleteEvent = () => {
-    setEvents((prevState) =>
-      prevState.filter((event) => event !== selectedCell)
-    );
+    const newEvents = events.filter((event) => event !== selectedCell);
+    changeEvents(newEvents);
     setSelectedCell("");
   };
 
-  const selectCell = (id) => {
-    setSelectedCell(id);
+  const selectCell = (isSelected, id) => {
+    setSelectedCell(isSelected ? id : "");
   };
 
   const navigateLeft = () => {
@@ -116,6 +117,7 @@ export function App() {
                 id={cell.id}
                 selectHandler={selectCell}
                 status={cell.status}
+                selected={selectedCell === cell.id}
               ></CalendarCell>
             ))
           )}

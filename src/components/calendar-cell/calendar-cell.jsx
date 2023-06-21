@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Cell } from "./calendar-cell.styles";
+import { Cell, CellWrapper } from "./calendar-cell.styles";
 
 export const CellStates = {
   Empty: "empty",
@@ -8,26 +8,23 @@ export const CellStates = {
 };
 
 export const CalendarCell = (props) => {
-  const [selected, setSelected] = useState(false);
-  const { status, selectHandler, id } = props;
+  const { status, selectHandler, id, selected } = props;
 
   const selectCell = () => {
     if (status === CellStates.Event) {
-      setSelected(true);
-      selectHandler && selectHandler(id);
+      selectHandler && selectHandler(true, id);
+    } else {
+      selectHandler && selectHandler(false);
     }
   };
 
-  const cellBlur = () => {
-    setSelected(false);
-  };
-
   return (
-    <Cell
-      $status={selected ? CellStates.Selected : status}
-      onClick={selectCell}
-      onBlur={cellBlur}
-      tabIndex="0"
-    ></Cell>
+    <CellWrapper>
+      <Cell
+        $status={selected ? CellStates.Selected : status}
+        onClick={selectCell}
+        tabIndex="0"
+      ></Cell>
+    </CellWrapper>
   );
 };

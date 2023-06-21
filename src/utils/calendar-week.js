@@ -24,7 +24,6 @@ class CalendarWeek {
     const startDate = new Date(date);
     startDate.setHours(0, 0, 0);
     const monday = startDate.getDate();
-    console.log(monday);
 
     this.week = Array(7)
       .fill("")

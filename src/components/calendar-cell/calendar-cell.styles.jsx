@@ -20,12 +20,11 @@ const chooseColor = (status) => {
   }
 };
 
-export const Cell = styled.div`
+export const CellWrapper = styled.div`
   border-right: ${border};
   border-bottom: ${border};
   height: ${cellHeight};
   box-sizing: border-box;
-  background-color: ${(props) => chooseColor(props.$status)};
 
   &:nth-last-child(-n + 7) {
     border-bottom: none;
@@ -34,4 +33,13 @@ export const Cell = styled.div`
   &:nth-child(-n + 7) {
     border-top: ${border};
   }
+`;
+
+export const Cell = styled.div`
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 1px solid white;
+  box-sizing: border-box;
+  background-color: ${(props) => chooseColor(props.$status)};
 `;
