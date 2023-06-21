@@ -45,21 +45,6 @@ class CalendarWeek {
     monday.setDate(monday.getDate() + 7);
     this.setWeek(monday);
   }
-
-  getDaysInMonth(year, month) {
-    return 33 - new Date(year, month, 33).getDate();
-  }
-
-  parseDate(date) {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const day = date.getDate();
-    const weekDay = date.getDay();
-    const hour = date.getHours();
-    const minutes = date.getMinutes();
-
-    return { year, month, day, weekDay, hour, minutes };
-  }
 }
 
 export const calendarWeek = new CalendarWeek();
