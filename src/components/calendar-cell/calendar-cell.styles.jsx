@@ -25,7 +25,7 @@ export const Cell = styled.div`
   border-bottom: ${border};
   height: ${cellHeight};
   box-sizing: border-box;
-  background-color: ${({ status }) => chooseColor(status)};
+  background-color: ${(props) => chooseColor(props.$status)};
 
   &:nth-last-child(-n + 7) {
     border-bottom: none;

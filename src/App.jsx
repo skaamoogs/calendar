@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Button,
   Calendar,
@@ -19,46 +19,25 @@ import {
 import { ArrowLeftIcon } from "./icons/arrow-left";
 import { ArrowRightIcon } from "./icons/arrow-right";
 import { PlusIcon } from "./icons/plus-icon";
-import {
-  CalendarCell,
-  CellStates,
-} from "./components/calendar-cell/calendar-cell";
-import { CalendarWeek } from "./utils/calendar-week";
-
-const defaultGrid = Array(24 * 7).fill({ status: CellStates.Empty });
-
-const hours = Array(24)
-  .fill("00:00")
-  .map((_, index) => {
-    const zero = index < 10 ? "0" : "";
-    return `${zero}${index}:00`;
-  });
-
-const determineCellNumber = (date) => {
-  const weekDay = date.getDay();
-  const hour = date.getHours();
-  return (weekDay - 1) * hour;
-};
-
-const isCurrentDay = ({ year, month, weekDay }) => {
-  const currentDate = new Date();
-  return (
-    year === currentDate.getFullYear() &&
-    month === currentDate.getMonth() &&
-    weekDay === currentDate.getDate()
-  );
-};
-
-const calendarWeek = new CalendarWeek(new Date());
+import { CalendarCell } from "./components/calendar-cell/calendar-cell";
+import { getCalendarGrid, hours, isCurrentDay } from "./utils/helpers";
+import { monthNames } from "./const";
+import { WEEK_ACTIONS, useWeek } from "./hooks/useWeek";
 
 export function App() {
-  const [week, setWeek] = useState(calendarWeek.getWeek());
-  const [grid, setGrid] = useState(defaultGrid);
+  const [week, changeWeek] = useWeek();
+  const [events, setEvents] = useState([]);
+  const [selectedCell, setSelectedCell] = useState("");
+  const calendarRef = useRef(null);
+
+  const grid = useMemo(() => getCalendarGrid(week, events), [week, events]);
 
   const addEvent = () => {
     const time = prompt(
       "Enter event time:\nYYYY-MM-DD HH:mm",
-      `${week.year}-${week.month}-${new Date().getDate()} 09:00`
+      `${week[0].getFullYear()}-${
+        week[0].getMonth() + 1
+      }-${week[0].getDate()} 09:00`
     );
     if (time === null) {
       return;
@@ -67,28 +46,35 @@ export function App() {
     if (isNaN(parsedTime)) {
       alert("Event time is incorrect!");
     } else {
-      const eventTime = new Date(parsedTime);
-      const cellNumber = determineCellNumber(eventTime);
-      const newGrid = grid.map((cell, index) => {
-        if (index === cellNumber) {
-          return { status: CellStates.Event };
-        }
-        return cell;
-      });
-      setGrid(newGrid);
+      const event = new Date(parsedTime);
+      changeWeek(WEEK_ACTIONS.SET_WEEK_BY_DATE, event);
+      calendarRef.current.scrollTop =
+        (calendarRef.current.scrollHeight / 24) * event.getHours();
+      setEvents((prevState) => [...prevState, event.toString()]);
     }
   };
 
-  const selectCell = () => {};
+  const deleteEvent = () => {
+    setEvents((prevState) =>
+      prevState.filter((event) => event !== selectedCell)
+    );
+    setSelectedCell("");
+  };
+
+  const selectCell = (id) => {
+    setSelectedCell(id);
+  };
 
   const navigateLeft = () => {
-    const newWeek = calendarWeek.setWeek({ ...week, monday: week.monday - 7 });
-    setWeek(newWeek);
+    changeWeek(WEEK_ACTIONS.SET_PREV_WEEK);
   };
 
   const navigateRight = () => {
-    const newWeek = calendarWeek.setWeek({ ...week, monday: week.monday + 7 });
-    setWeek(newWeek);
+    changeWeek(WEEK_ACTIONS.SET_NEXT_WEEK);
+  };
+
+  const moveToCurrentDate = () => {
+    changeWeek(WEEK_ACTIONS.SET_WEEK_BY_DATE, new Date());
   };
 
   return (
@@ -100,44 +86,44 @@ export function App() {
         </Button>
       </Header>
       <DateArea>
-        {week.weekDays.map((weekDay, index) => (
-          <Day key={weekDay}>
-            <WeekDay>{calendarWeek.weekSymbols[index]}</WeekDay>
-            <MonthDay $selected={isCurrentDay({ ...week, weekDay })}>
-              {weekDay}
-            </MonthDay>
+        {week.map((date) => (
+          <Day key={date.toDateString()}>
+            <WeekDay>{date.toString()[0]}</WeekDay>
+            <MonthDay $selected={isCurrentDay(date)}>{date.getDate()}</MonthDay>
           </Day>
         ))}
         <MonthNavigationButton onClick={navigateLeft}>
           <ArrowLeftIcon width="16px" height="16px" />
         </MonthNavigationButton>
         <Month>
-          {calendarWeek.monthNames[week.month]} {week.year}
+          {monthNames[week[3].getMonth()]} {week[3].getFullYear()}
         </Month>
         <MonthNavigationButton onClick={navigateRight}>
           <ArrowRightIcon width="16px" height="16px" />
         </MonthNavigationButton>
       </DateArea>
-      <Calendar>
+      <Calendar ref={calendarRef}>
         <LeftBar>
           {hours.map((hour) => (
             <Hour key={hour}>{hour}</Hour>
           ))}
         </LeftBar>
         <Grid>
-          {grid.map((cell, index) => (
-            <CalendarCell
-              key={index}
-              id={index}
-              onClick={selectCell}
-              status={cell.status}
-            ></CalendarCell>
-          ))}
+          {grid.map(({ _, cells }) =>
+            cells.map((cell) => (
+              <CalendarCell
+                key={cell.id}
+                id={cell.id}
+                selectHandler={selectCell}
+                status={cell.status}
+              ></CalendarCell>
+            ))
+          )}
         </Grid>
       </Calendar>
       <Footer>
-        <Button>Today</Button>
-        <Button>Delete</Button>
+        <Button onClick={moveToCurrentDate}>Today</Button>
+        {selectedCell && <Button onClick={deleteEvent}>Delete</Button>}
       </Footer>
     </Wrapper>
   );

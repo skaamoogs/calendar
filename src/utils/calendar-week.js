@@ -1,79 +1,50 @@
-export class CalendarWeek {
-  constructor(date) {
-    this.setWeekByDate(date);
+class CalendarWeek {
+  constructor() {
+    this.setWeekByDate(new Date());
   }
-
-  weekSymbols = ["M", "T", "W", "T", "F", "S", "S"];
-
-  monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
 
   getWeek() {
     return this.week;
   }
 
   setWeekByDate(date) {
-    const parsedDate = this.parseDate(date);
-    return this.setWeek({
-      ...parsedDate,
-      monday: parsedDate.day - parsedDate.weekDay + 1,
-    });
+    const newDate = new Date(date);
+    const day = newDate.getDate();
+
+    let weekDay = newDate.getDay();
+    /* it converts week days range from 0...6 (Sun...Mon) to 1..7 (Mon...Sun)
+     */
+    weekDay = weekDay ? weekDay : 7;
+
+    newDate.setDate(day - weekDay + 1);
+    this.setWeek(newDate);
   }
 
   setWeek(date) {
-    let { year, month, monday } = date;
-    if (monday < 0) {
-      let prevYear = year;
-      let prevMonth = month - 1;
-      if (prevMonth < 0) {
-        prevYear--;
-        prevMonth = 11;
-      }
-      if (monday <= -4) {
-        month = prevMonth;
-        year = prevYear;
-      }
-      monday += this.getDaysInMonth(prevYear, prevMonth);
-    }
-    let sunday = monday + 7;
-    let currentMonthDays = this.getDaysInMonth(year, month);
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0);
+    const monday = startDate.getDate();
+    console.log(monday);
 
-    if (sunday > currentMonthDays) {
-      let nextYear = year;
-      let nextMonth = month + 1;
-      if (nextMonth > 11) {
-        nextYear++;
-        nextMonth = 0;
-      }
-      if (sunday >= currentMonthDays + 4) {
-        month = nextMonth;
-        year = nextYear;
-      }
-      sunday -= currentMonthDays;
-    }
+    this.week = Array(7)
+      .fill("")
+      .map((_, index) => {
+        const currentDate = new Date(startDate);
+        currentDate.setDate(monday + index);
+        return currentDate;
+      });
+  }
 
-    const weekDays = this.weekSymbols.map((day, index) => {
-      let number = monday + index;
-      if (number > currentMonthDays) {
-        return number - currentMonthDays;
-      }
-      return number;
-    });
+  setPreviousWeek() {
+    const monday = new Date(this.week[0]);
+    monday.setDate(monday.getDate() - 7);
+    this.setWeek(monday);
+  }
 
-    this.week = { year, month, weekDays, monday };
-    return this.week;
+  setNextWeek() {
+    const monday = new Date(this.week[0]);
+    monday.setDate(monday.getDate() + 7);
+    this.setWeek(monday);
   }
 
   getDaysInMonth(year, month) {
@@ -91,3 +62,5 @@ export class CalendarWeek {
     return { year, month, day, weekDay, hour, minutes };
   }
 }
+
+export const calendarWeek = new CalendarWeek();

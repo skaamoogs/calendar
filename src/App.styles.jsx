@@ -56,8 +56,6 @@ export const DateArea = styled.div`
   justify-content: center;
 `;
 
-export const Days = styled.div``;
-
 export const Day = styled.div`
   display: flex;
   flex-direction: column;
