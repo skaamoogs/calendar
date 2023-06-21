@@ -36,7 +36,7 @@ export function App() {
   const addEvent = () => {
     const time = prompt(
       "Enter event time:\nYYYY-MM-DD HH:mm",
-      `${week[0].getFullYear()}-${
+      `${week[0].getFullYear()}-0${
         week[0].getMonth() + 1
       }-${week[0].getDate()} 09:00`
     );

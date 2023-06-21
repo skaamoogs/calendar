@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Cell, CellWrapper } from "./calendar-cell.styles";
 
 export const CellStates = {
